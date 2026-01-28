@@ -1,0 +1,68 @@
+<header class="py-5" style="background-color: #8C6A5D;">
+  <div class="container px-4 px-lg-5 my-5">
+    <div class="text-center text-white">
+      <h1 class="display-4 fw-bolder">Find Your Fragrance</h1>
+      <p class="lead fw-normal text-white-50 mb-0">Tell us your preferences and we'll recommend fragrances that match.</p>
+    </div>
+  </div>
+</header>
+
+<section class="py-5">
+  <div class="container px-4 px-lg-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0 rounded-3 mb-5" style="border-left: 4px solid #8C6A5D !important;">
+          <div class="card-body p-4 p-lg-5">
+            <h3 class="fw-bold mb-4" style="color: #8C6A5D;">Your Preferences</h3>
+            <form id="find-fragrance-form">
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Seasons you prefer</label>
+                <p class="form-text text-muted small mb-2">Select all that apply:</p>
+                <div id="find-seasons" class="d-flex flex-wrap gap-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="find-seasons" id="find-season-spring" value="Spring">
+                    <label class="form-check-label" for="find-season-spring">Spring</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="find-seasons" id="find-season-summer" value="Summer">
+                    <label class="form-check-label" for="find-season-summer">Summer</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="find-seasons" id="find-season-autumn" value="Autumn">
+                    <label class="form-check-label" for="find-season-autumn">Autumn</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="find-seasons" id="find-season-winter" value="Winter">
+                    <label class="form-check-label" for="find-season-winter">Winter</label>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Notes you like</label>
+                <p class="form-text text-muted small mb-2">Select all that apply:</p>
+                <div id="find-notes" class="border rounded p-3" style="max-height: 200px; overflow-y: auto; background-color: #f8f9fa;">
+                  <p class="text-muted small mb-0">Loading notes...</p>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-lg w-100" style="background-color: #8C6A5D; color: #fff;">
+                <i class="bi bi-search me-2"></i>Get recommendations
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div id="find-results-wrapper" class="d-none">
+          <h3 class="fw-bold mb-4" style="color: #8C6A5D;">Recommended for you</h3>
+          <p class="text-muted mb-4" id="find-results-intro"></p>
+          <div id="find-results" class="row gx-4 gx-lg-5 row-cols-1 row-cols-md-2 row-cols-xl-3">
+            <!-- Results injected by JS -->
+          </div>
+        </div>
+
+        <div id="find-empty" class="text-center py-5 d-none">
+          <p class="lead text-muted">Select at least one season or note, then click "Get recommendations".</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

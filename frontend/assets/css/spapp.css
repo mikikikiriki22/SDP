@@ -1,0 +1,91 @@
+main#spapp > section { display: none; } 
+main#spapp > section:last-child { display: block; } 
+@keyframes appear { from { width:0; opacity:0; } to { width:100%; opacity:1; } } 
+main#spapp > section:target { display: block; animation: appear 0.1s linear 1; } 
+main#spapp > section:target ~ * { display: none; }
+
+/* Toastr: force top-right, always visible */
+#toast-container.toast-top-right {
+  top: 12px !important;
+  right: 12px !important;
+  position: fixed !important;
+  z-index: 999999 !important;
+}
+#toast-container .toast {
+  opacity: 1 !important;
+  background-color: #333 !important;
+  color: #fff !important;
+}
+#toast-container .toast-info { background-color: #2f96b4 !important; }
+#toast-container .toast-success { background-color: #51a351 !important; }
+#toast-container .toast-error { background-color: #bd362f !important; }
+#toast-container .toast-warning { background-color: #f89406 !important; }
+
+/* Custom navbar button styles to match site theme */
+#homepage-btn,
+#find-btn,
+#about-btn,
+#profile-btn,
+#adminpage-btn,
+#register-btn,
+#login-btn {
+  color: #8C6A5D !important;
+  background-color: transparent !important;
+  border-color: #8C6A5D !important;
+  border-width: 2px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+#homepage-btn:hover,
+#find-btn:hover,
+#about-btn:hover,
+#profile-btn:hover,
+#adminpage-btn:hover,
+#register-btn:hover,
+#login-btn:hover {
+  color: #fff !important;
+  background-color: #8C6A5D !important;
+  border-color: #8C6A5D !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(140, 106, 93, 0.3) !important;
+}
+
+#homepage-btn.active,
+#find-btn.active,
+#about-btn.active,
+#profile-btn.active,
+#adminpage-btn.active {
+  color: #fff !important;
+  background-color: #8C6A5D !important;
+  border-color: #8C6A5D !important;
+}
+
+#logout-btn {
+  color: #fff !important;
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  border-width: 2px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+#logout-btn:hover {
+  background-color: #bb2d3b !important;
+  border-color: #bb2d3b !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3) !important;
+}
+
+/* Force hide buttons with force-hide class */
+.force-hide {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure right group stays on the right */
+#navbar-right-group {
+  margin-left: auto !important;
+}
