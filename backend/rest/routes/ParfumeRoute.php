@@ -97,6 +97,7 @@ Flight::route('GET /parfumes/@id', function ($id) {
 
 Flight::route('POST /parfumes', function () {
     try {
+        console.log("Adding fragrance");
         $data = Flight::request()->data->getData();
         $fragranceService = new ParfumeService();
         $result = $fragranceService->addFragrance($data);
