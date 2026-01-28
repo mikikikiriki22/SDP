@@ -40,7 +40,11 @@ class Config
    }
 
    public static function get_env($name, $default){
-       return isset($_ENV[$name]) && trim($_ENV[$name]) != "" ? $_ENV[$name] : $default;
+       if (isset($_ENV[$name]) && trim((string) $_ENV[$name]) !== "") return $_ENV[$name];
+       $v = getenv($name);
+       if ($v !== false && trim($v) !== "") return $v;
+       if (isset($_SERVER[$name]) && trim((string) $_SERVER[$name]) !== "") return $_SERVER[$name];
+       return $default;
    }
 
 }
@@ -52,16 +56,22 @@ class Database {
    public static function connect() {
        if (self::$connection === null) {
            try {
+               $host = Config::DB_HOST();
+               $opts = [
+                   PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                   PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+               ];
+               // DigitalOcean Managed MySQL requires SSL
+               if (strpos($host, 'ondigitalocean.com') !== false) {
+                   $opts[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+               }
                self::$connection = new PDO(
-                   "mysql:host=" . Config::DB_HOST() . 
-                   ";dbname=" . Config::DB_NAME().
+                   "mysql:host=" . $host .
+                   ";dbname=" . Config::DB_NAME() .
                    ";port=" . Config::DB_PORT(),
                    Config::DB_USER(),
                    Config::DB_PASSWORD(),
-                   [
-                       PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                       PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-                   ]
+                   $opts
                );
            } catch (PDOException $e) {
                throw new Exception("Connection failed: " . $e->getMessage());
