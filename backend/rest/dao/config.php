@@ -40,17 +40,7 @@ class Config
    }
 
    public static function get_env($name, $default){
-       if (isset($_ENV[$name]) && trim($_ENV[$name]) !== "") {
-           return $_ENV[$name];
-       }
-       $val = getenv($name);
-       if ($val !== false && trim($val) !== "") {
-           return $val;
-       }
-       if (isset($_SERVER[$name]) && trim($_SERVER[$name]) !== "") {
-           return $_SERVER[$name];
-       }
-       return $default;
+       return isset($_ENV[$name]) && trim($_ENV[$name]) != "" ? $_ENV[$name] : $default;
    }
 
 }
