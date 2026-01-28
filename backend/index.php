@@ -95,7 +95,7 @@ require_once __DIR__ . '/rest/routes/ShareRoute.php';
 Flight::before('start', function () {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, Authentication');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
     
     if (Flight::request()->method == 'OPTIONS') {
         Flight::halt(200);
