@@ -26,8 +26,12 @@ Flight::register('parfumeService', 'ParfumeService');
  */
 
 Flight::route('GET /parfumes', function () {
-    $data = Flight::parfumeService()->getAllFragrances();
-    Flight::json($data);
+    try {
+        $data = Flight::parfumeService()->getAllFragrances();
+        Flight::json($data);
+    } catch (Exception $e) {
+        Flight::json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+    }
 });
 
 
@@ -97,7 +101,6 @@ Flight::route('GET /parfumes/@id', function ($id) {
 
 Flight::route('POST /parfumes', function () {
     try {
-        echo "Adding fragrance";
         $data = Flight::request()->data->getData();
         $fragranceService = new ParfumeService();
         $result = $fragranceService->addFragrance($data);
