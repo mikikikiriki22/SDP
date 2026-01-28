@@ -34,6 +34,19 @@ Flight::register('auth_middleware', 'AuthMiddleware');
 Flight::map('JWT_SECRET', function () { return 'mileLegenda333'; });
 
 // ===========================================================================
+// GLOBAL ERROR HANDLER – return JSON instead of generic 500
+// ===========================================================================
+Flight::map('error', function (\Throwable $e) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(500);
+    echo json_encode([
+        'error' => $e->getMessage(),
+        'file'  => $e->getFile(),
+        'line'  => $e->getLine(),
+    ]);
+});
+
+// ===========================================================================
 // AUTHENTICATION MIDDLEWARE
 // Public routes skip JWT; all others require valid token
 // ===========================================================================
@@ -41,7 +54,7 @@ Flight::route('/*', function () {
     $public_routes = [
         '/auth/login', '/auth/register', '/auth/verify',
         '/perfumes', '/parfumes', '/brands', '/notes', '/reviews',
-        '/login', '/register'
+        '/login', '/register', '/ping'
     ];
     $request_url = rtrim(Flight::request()->url, '/');
     $is_public_route = false;
@@ -95,7 +108,7 @@ require_once __DIR__ . '/rest/routes/ShareRoute.php';
 Flight::before('start', function () {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, Authentication');
     
     if (Flight::request()->method == 'OPTIONS') {
         Flight::halt(200);
@@ -103,4 +116,6 @@ Flight::before('start', function () {
 });
 
 Flight::route('/', function () { echo 'AromaVerse API'; });
+Flight::route('GET /ping', function () { Flight::json(['ok' => true]); });
+
 Flight::start();
