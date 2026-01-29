@@ -71,7 +71,23 @@ Flight::route('/*', function () {
 
     // Protected routes: require valid JWT
     try {
-        $token = Flight::request()->getHeader("Authentication");
+        // Use native headers to be more robust across environments
+        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        $token = null;
+
+        if (!empty($headers)) {
+            if (isset($headers['Authentication'])) {
+                $token = $headers['Authentication'];
+            } elseif (isset($headers['authentication'])) {
+                $token = $headers['authentication'];
+            }
+        }
+
+        // Fallback to Flight's header helper if nothing found
+        if (!$token) {
+            $token = Flight::request()->getHeader("Authentication");
+        }
+
         if (Flight::auth_middleware()->verifyToken($token)) {
             return TRUE;
         }
