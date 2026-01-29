@@ -70,6 +70,7 @@ Flight::route('/*', function () {
     if ($is_public_route) return true;
 
     // Protected routes: require valid JWT
+    //
     // Protected routes: require valid JWT
     try {
         // Use native headers to be more robust across environments
