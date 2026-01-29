@@ -4,12 +4,24 @@ use Firebase\JWT\Key;
 
 class AuthMiddleware {
     public function verifyToken($token) {
-        if (!$token)
-            Flight::halt(401, "Missing authentication header"); 
-        $decoded_token = JWT::decode($token, new Key(Flight::JWT_SECRET(), 'HS256'));
-        Flight::set('user', $decoded_token->user);
-        Flight::set('jwt_token', $token);
-        return TRUE;
+        if (!$token) {
+            Flight::halt(401, "Missing authentication header");
+        }
+
+        try {
+            // Log attempts to decode JWT for easier debugging
+            error_log("Attempting to decode token with secret: " . Flight::JWT_SECRET());
+            $decoded_token = JWT::decode($token, new Key(Flight::JWT_SECRET(), 'HS256'));
+            error_log("Token decoded successfully");
+
+            Flight::set('user', $decoded_token->user);
+            Flight::set('jwt_token', $token);
+            return TRUE;
+        } catch (\Exception $e) {
+            // Log the exact JWT error and return a clear 401 message
+            error_log("JWT decode error: " . $e->getMessage());
+            Flight::halt(401, "Invalid token: " . $e->getMessage());
+        }
     }
 
     public function authorizeRole($requiredRole) {
