@@ -926,7 +926,7 @@ $(document).ready(function () {
 
               if (responseData && responseData.success && responseData.image_url) {
                 toastr.success('Image uploaded successfully');
-                saveFragrance(responseData.image_url);
+                setTimeout(function () { saveFragrance(responseData.image_url); }, 300);
               } else {
                 const errorMsg = responseData?.error || responseData?.message || 'Unknown error';
                 toastr.error('Failed to upload image: ' + errorMsg);

@@ -127,7 +127,9 @@ Flight::route('POST /upload/image', function() {
             ], 500);
             return;
         }
-        
+        clearstatcache(true, $targetPath);
+        chmod($targetPath, 0644);
+
         // Verify file was actually saved
         if (!file_exists($targetPath)) {
             Flight::json([
@@ -146,7 +148,10 @@ Flight::route('POST /upload/image', function() {
             ], 500);
             return;
         }
-        
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($targetPath, true);
+        }
+
         // Return path relative to backend base URL (frontend prepends API base URL to load image)
         $imageUrl = 'uploads/' . $filename;
         
