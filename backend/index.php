@@ -93,17 +93,29 @@ Flight::route('/*', function () {
             $token = Flight::request()->getHeader("Authentication");
         }
 
-        // TEMPORARY DEBUG - ONLY HERE
-        error_log("=== AUTH DEBUG ===");
+        // DEBUG - Token extraction
+        error_log("=== INDEX.PHP AUTH DEBUG ===");
+        error_log("Request URL: " . $request_url);
+        error_log("Request Method: " . Flight::request()->method);
         error_log("All headers: " . json_encode($headers));
-        error_log("Token value: " . ($token ? substr($token, 0, 20) . "..." : "NULL"));
-        error_log("=================");
+        error_log("Token extracted: " . ($token ? substr($token, 0, 20) . "..." : "NULL"));
+        error_log("============================");
 
         if (Flight::auth_middleware()->verifyToken($token)) {
+            error_log("Middleware verifyToken returned TRUE");
             return TRUE;
+        } else {
+            error_log("Middleware verifyToken returned FALSE (should not reach here)");
+            Flight::halt(401, json_encode(['error' => 'Authentication failed', 'debug' => 'verifyToken returned false']));
         }
     } catch (\Exception $e) {
-        Flight::halt(401, $e->getMessage());
+        error_log("CAUGHT EXCEPTION in index.php middleware: " . $e->getMessage());
+        error_log("Exception trace: " . $e->getTraceAsString());
+        Flight::halt(401, json_encode([
+            'error' => 'Authentication exception',
+            'message' => $e->getMessage(),
+            'type' => get_class($e)
+        ]));
     }
 });
 
