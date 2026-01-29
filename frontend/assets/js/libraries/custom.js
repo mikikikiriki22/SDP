@@ -8,6 +8,17 @@
 $(document).ready(function () {
   var app = $.spapp({ pageNotFound: "error_404" });
 
+  // Close mobile navbar when a nav link is clicked (dropdown closes after selection)
+  $(document).on("click", "#navbarSupportedContent a[href^='#'], #navbarSupportedContent button", function () {
+    if (window.innerWidth < 992) {
+      var el = document.getElementById("navbarSupportedContent");
+      if (el && typeof bootstrap !== "undefined" && bootstrap.Collapse) {
+        var c = bootstrap.Collapse.getInstance(el);
+        if (c) c.hide();
+      }
+    }
+  });
+
   // ===========================================================================
   // HELPER FUNCTIONS
   // ===========================================================================

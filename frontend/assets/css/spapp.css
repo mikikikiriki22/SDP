@@ -1,8 +1,31 @@
-main#spapp > section { display: none; } 
-main#spapp > section:last-child { display: block; } 
-@keyframes appear { from { width:0; opacity:0; } to { width:100%; opacity:1; } } 
-main#spapp > section:target { display: block; animation: appear 0.1s linear 1; } 
-main#spapp > section:target ~ * { display: none; }
+main#spapp>section {
+  display: none;
+}
+
+main#spapp>section:last-child {
+  display: block;
+}
+
+@keyframes appear {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+
+  to {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+main#spapp>section:target {
+  display: block;
+  animation: appear 0.1s linear 1;
+}
+
+main#spapp>section:target~* {
+  display: none;
+}
 
 /* Toastr: force top-right, always visible */
 #toast-container.toast-top-right {
@@ -11,15 +34,28 @@ main#spapp > section:target ~ * { display: none; }
   position: fixed !important;
   z-index: 999999 !important;
 }
+
 #toast-container .toast {
   opacity: 1 !important;
   background-color: #333 !important;
   color: #fff !important;
 }
-#toast-container .toast-info { background-color: #2f96b4 !important; }
-#toast-container .toast-success { background-color: #51a351 !important; }
-#toast-container .toast-error { background-color: #bd362f !important; }
-#toast-container .toast-warning { background-color: #f89406 !important; }
+
+#toast-container .toast-info {
+  background-color: #2f96b4 !important;
+}
+
+#toast-container .toast-success {
+  background-color: #51a351 !important;
+}
+
+#toast-container .toast-error {
+  background-color: #bd362f !important;
+}
+
+#toast-container .toast-warning {
+  background-color: #f89406 !important;
+}
 
 /* Custom navbar button styles to match site theme */
 #homepage-btn,
@@ -85,7 +121,49 @@ main#spapp > section:target ~ * { display: none; }
   pointer-events: none !important;
 }
 
-/* Ensure right group stays on the right */
+/* Ensure right group stays on the right on desktop */
 #navbar-right-group {
   margin-left: auto !important;
+}
+
+/* ========== Mobile navbar: dropdown menu ========== */
+/* Below lg: collapsed menu stacks vertically and looks like a dropdown */
+@media (max-width: 991.98px) {
+  .navbar-nav-mobile {
+    padding-top: 0.75rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .navbar-nav-mobile .d-flex.gap-2 {
+    gap: 0.5rem !important;
+  }
+
+  /* Full-width buttons in collapsed menu for easier tap */
+  .navbar-collapse .nav-link-mobile,
+  .navbar-collapse #navbar-right-group .btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Right group: no margin when stacked; separator line above it */
+  #navbar-right-group {
+    margin-left: 0 !important;
+    border-top: 1px solid rgba(140, 106, 93, 0.25);
+    padding-top: 0.75rem;
+  }
+
+  /* Toggler: match theme and ensure visible */
+  .navbar-toggler {
+    border-color: #8C6A5D;
+    padding: 0.4rem 0.65rem;
+  }
+
+  .navbar-toggler:focus {
+    box-shadow: 0 0 0 2px rgba(140, 106, 93, 0.35);
+  }
+
+  .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%238C6A5D' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  }
 }
