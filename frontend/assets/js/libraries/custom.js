@@ -26,6 +26,20 @@ $(document).ready(function () {
     });
   }
 
+  /**
+   * Resolve image_url from API to a full URL for <img src>.
+   * Backend returns "uploads/filename" - must be loaded from PROJECT_BASE_URL (backend), not frontend.
+   */
+  function fullImageUrl(url, defaultPath) {
+    defaultPath = defaultPath || "assets/images/default.jpg";
+    var frontendBase = (typeof Constants !== "undefined" && Constants.FRONTEND_BASE_URL) ? Constants.FRONTEND_BASE_URL : (window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "/"));
+    var backendBase = (typeof Constants !== "undefined" && Constants.PROJECT_BASE_URL) ? Constants.PROJECT_BASE_URL : "";
+    if (!url) return frontendBase.replace(/\/$/, "") + "/" + defaultPath.replace(/^\//, "");
+    if (url.indexOf("http") === 0) return url;
+    if (url.indexOf("uploads/") === 0) return backendBase.replace(/\/$/, "") + "/" + url.replace(/^\//, "");
+    return frontendBase.replace(/\/$/, "") + "/" + url.replace(/^\//, "");
+  }
+
   /** Render fragrances on homepage grid. Filters by query (name or brand), shows no-results message when empty. */
   function renderHomepageFragrances(fragrances, query) {
     var list = fragrances || [];
@@ -51,7 +65,7 @@ $(document).ready(function () {
         '<div class="col mb-5">' +
         '<a href="#item?id=' + frag.id + '" class="text-decoration-none d-block fragrance-card" data-id="' + frag.id + '">' +
         '<div class="card position-relative overflow-hidden" style="height: 400px;">' +
-        '<img class="card-img h-100 w-100" src="' + (frag.image_url || "assets/images/default.jpg") + '" alt="Fragrance" style="object-fit: scale-down; display: block; border-radius: 10px;">' +
+        '<img class="card-img h-100 w-100" src="' + fullImageUrl(frag.image_url) + '" alt="Fragrance" style="object-fit: scale-down; display: block; border-radius: 10px;">' +
         '<div class="card-img-overlay d-flex flex-column align-items-center justify-content-end p-3">' +
         '<h5 class="fw-bolder mb-2" style="color: #8C6A5D;">' + (frag.name || "") + '</h5>' +
         '<p class="mb-0" style="color: #3E3232;"><span>' + (frag.brand_name || "") + '</span></p>' +
@@ -87,9 +101,7 @@ $(document).ready(function () {
       var frag = window.currentFragrance;
       var fragName = frag ? frag.name : 'Fragrance';
       var fragId = frag ? frag.id : fragranceId;
-      var imgPath = (frag && frag.image_url) ? frag.image_url : 'assets/images/default.jpg';
-      var base = (typeof Constants !== 'undefined' && Constants.FRONTEND_BASE_URL) ? Constants.FRONTEND_BASE_URL : (window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/'));
-      var imageUrl = imgPath.indexOf('http') === 0 ? imgPath : (base.replace(/\/$/, '') + '/' + imgPath.replace(/^\//, ''));
+      var imageUrl = fullImageUrl(frag && frag.image_url ? frag.image_url : null);
       var reviewData = { review_id: reviewId, fragrance_name: fragName, reviewer_name: reviewerName, rating: rating, comment: comment, parfume_id: fragId, image_url: imageUrl };
       $(this).closest('.dropdown').removeClass('show');
       $(this).closest('.dropdown-menu').removeClass('show');
@@ -131,7 +143,7 @@ $(document).ready(function () {
       RestClient.get(`users/${user.id}`, function (profile) {
         var container = $("#profile-icon-container");
         if (profile && profile.image_url) {
-          container.html(`<img src="${profile.image_url}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;" />`);
+          container.html(`<img src="${fullImageUrl(profile.image_url)}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;" />`);
         } else {
           container.html('<i class="bi bi-person-circle" style="font-size: 14px; color: #8C6A5D;"></i>');
         }
@@ -307,7 +319,7 @@ $(document).ready(function () {
               <div class="col mb-4">
                 <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
                   <a href="#item?id=${f.id}" class="text-decoration-none d-block">
-                    <img class="card-img-top" src="${f.image_url || 'assets/images/default.jpg'}" alt="${(f.name || '').replace(/"/g, '&quot;')}" style="height: 220px; object-fit: cover;" />
+                    <img class="card-img-top" src="${fullImageUrl(f.image_url)}" alt="${(f.name || '').replace(/"/g, '&quot;')}" style="height: 220px; object-fit: cover;" />
                     <div class="card-body">
                       <div class="d-flex justify-content-between align-items-start mb-2">
                         <h5 class="card-title fw-bold mb-0" style="color: #8C6A5D;">${(f.name || '').replace(/</g, '&lt;')}</h5>
@@ -388,7 +400,7 @@ $(document).ready(function () {
               <div class="col-md-5 text-center">
                 <div id="profile-picture-block" class="mb-4">
                   <div style="width: 180px; height: 180px; margin: 0 auto; border-radius: 50%; background: #f5f5f5; border: 2px solid #8C6A5D; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                    ${profile.image_url ? `<img id="profile-avatar-img" src="${profile.image_url}" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />` : `<svg id="profile-avatar-placeholder" width='80' height='80' fill='#8C6A5D' viewBox='0 0 16 16'><path d='M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z'/><path fill-rule='evenodd' d='M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37c.69-1.19 2.065-2.37 5.468-2.37 3.403 0 4.778 1.18 5.468 2.37A7 7 0 0 0 8 1z'/></svg>`}
+                    ${profile.image_url ? `<img id="profile-avatar-img" src="${fullImageUrl(profile.image_url)}" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />` : `<svg id="profile-avatar-placeholder" width='80' height='80' fill='#8C6A5D' viewBox='0 0 16 16'><path d='M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z'/><path fill-rule='evenodd' d='M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37c.69-1.19 2.065-2.37 5.468-2.37 3.403 0 4.778 1.18 5.468 2.37A7 7 0 0 0 8 1z'/></svg>`}
                   </div>
                   <input type="file" id="profile-picture-input" accept=".jpg,.jpeg,.png,.gif,.webp" class="d-none">
                   <div class="mt-3 d-flex flex-column flex-sm-row gap-2 justify-content-center">
@@ -628,7 +640,7 @@ $(document).ready(function () {
               <td>${user.username}</td>
               <td>${user.email}</td>
               <td>
-                ${user.image_url ? `<img src='${user.image_url}' alt='User Image' style='width:40px;height:40px;border-radius:50%;object-fit:cover;' />` : `<svg width='32' height='32' fill='#8C6A5D' viewBox='0 0 16 16'><path d='M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z'/><path fill-rule='evenodd' d='M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37c.69-1.19 2.065-2.37 5.468-2.37 3.403 0 4.778 1.18 5.468 2.37A7 7 0 0 0 8 1z'/></svg>`}
+                ${user.image_url ? `<img src='${fullImageUrl(user.image_url)}' alt='User Image' style='width:40px;height:40px;border-radius:50%;object-fit:cover;' />` : `<svg width='32' height='32' fill='#8C6A5D' viewBox='0 0 16 16'><path d='M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z'/><path fill-rule='evenodd' d='M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37c.69-1.19 2.065-2.37 5.468-2.37 3.403 0 4.778 1.18 5.468 2.37A7 7 0 0 0 8 1z'/></svg>`}
               </td>
               <td>
                 <button class="btn btn-primary view-user-btn">View</button>
@@ -780,7 +792,7 @@ $(document).ready(function () {
           // Clear file input and show existing image in preview
           $('#fragranceImage').val('');
           if (frag.image_url) {
-            $('#previewImg').attr('src', frag.image_url);
+            $('#previewImg').attr('src', fullImageUrl(frag.image_url));
             $('#imagePreview').show();
           } else {
             $('#imagePreview').hide();
@@ -1049,7 +1061,7 @@ $(document).ready(function () {
           <div class="container py-5">
             <div class="row gx-4 gx-lg-5 align-items-center">
               <div class="col-md-5">
-                <img class="card-img-top mb-5 mb-md-0 w-100" src="${frag.image_url || 'assets/images/default.jpg'}" alt="Fragrance" style="object-fit: scale-down; border-radius: 10px; max-height: 400px;" />
+                <img class="card-img-top mb-5 mb-md-0 w-100" src="${fullImageUrl(frag.image_url)}" alt="Fragrance" style="object-fit: scale-down; border-radius: 10px; max-height: 400px;" />
                 <div class="container py-4">
                   <div class="row text-center mb-4">
                     <div class="col">
