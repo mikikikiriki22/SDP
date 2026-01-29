@@ -10,4 +10,16 @@ const Constants = {
     FRONTEND_BASE_URL: "https://sea-lion-app-v3ujv.ondigitalocean.app/frontend/",
     USER_ROLE: "user",
     ADMIN_ROLE: "admin"
-}; 
+};
+
+// Setup jQuery to send authentication token with every AJAX request
+$(document).ready(function() {
+    $.ajaxSetup({
+        beforeSend: function(xhr) {
+            var token = localStorage.getItem("user_token");
+            if (token && token !== "undefined") {
+                xhr.setRequestHeader("Authorization", "Bearer " + token);
+            }
+        }
+    });
+});
