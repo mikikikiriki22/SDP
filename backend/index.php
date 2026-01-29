@@ -31,7 +31,9 @@ Flight::register('brand_service', 'BrandService');
 Flight::register('note_service', 'NoteService');
 
 Flight::register('auth_middleware', 'AuthMiddleware');
-Flight::map('JWT_SECRET', function () { return 'mileLegenda333'; });
+// Use same secret as AuthService (Config::JWT_SECRET) so sign and verify match
+require_once __DIR__ . '/rest/dao/config.php';
+Flight::map('JWT_SECRET', function () { return Config::JWT_SECRET(); });
 
 // ===========================================================================
 // AUTHENTICATION MIDDLEWARE
