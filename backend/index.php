@@ -70,6 +70,7 @@ Flight::route('/*', function () {
     if ($is_public_route) return true;
 
     // Protected routes: require valid JWT
+    // Protected routes: require valid JWT
     try {
         // Use native headers to be more robust across environments
         $headers = function_exists('getallheaders') ? getallheaders() : [];
@@ -88,6 +89,12 @@ Flight::route('/*', function () {
             $token = Flight::request()->getHeader("Authentication");
         }
 
+        // TEMPORARY DEBUG - ONLY HERE
+        error_log("=== AUTH DEBUG ===");
+        error_log("All headers: " . json_encode($headers));
+        error_log("Token value: " . ($token ? substr($token, 0, 20) . "..." : "NULL"));
+        error_log("=================");
+
         if (Flight::auth_middleware()->verifyToken($token)) {
             return TRUE;
         }
@@ -95,6 +102,10 @@ Flight::route('/*', function () {
         Flight::halt(401, $e->getMessage());
     }
 });
+
+// Route definitions...
+// ...
+// Flight::start(); should be at the end
 
 // ===========================================================================
 // ROUTE DEFINITIONS
@@ -120,3 +131,5 @@ Flight::before('start', function () {
 
 Flight::route('/', function () { echo 'AromaVerse API'; });
 Flight::start();
+
+
