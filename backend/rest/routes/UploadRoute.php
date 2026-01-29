@@ -3,7 +3,29 @@
 /**
  * File upload route for images (profile pics, fragrance images).
  * Any authenticated user can upload. Global middleware enforces JWT.
+ * Uploads are stored in backend/uploads/ and served via GET /uploads/@filename.
  */
+
+// Serve uploaded images (public, no auth required)
+Flight::route('GET /uploads/@filename', function($filename) {
+    $filename = basename($filename);
+    $uploadDir = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
+    $uploadDir = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $uploadDir);
+    $filepath = $uploadDir . $filename;
+
+    if (!file_exists($filepath) || !is_file($filepath)) {
+        Flight::halt(404, 'Image not found');
+    }
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $filepath);
+    finfo_close($finfo);
+
+    header('Content-Type: ' . $mimeType);
+    header('Content-Length: ' . filesize($filepath));
+    readfile($filepath);
+    exit;
+});
 
 Flight::route('POST /upload/image', function() {
     try {
@@ -59,16 +81,10 @@ Flight::route('POST /upload/image', function() {
         }
         $filename = uniqid('fragrance_', true) . '.' . $extension;
         
-        // Define upload directory (relative to backend)
-        // From backend/rest/routes/UploadRoute.php, go up to project root, then to frontend/assets/images
-        // __DIR__ = backend/rest/routes
-        // dirname(__DIR__) = backend/rest
-        // dirname(dirname(__DIR__)) = backend
-        // dirname(dirname(dirname(__DIR__))) = project root
-        $baseDir = dirname(dirname(dirname(__DIR__))); // Go from backend/rest/routes to project root
-        $uploadDir = $baseDir . DIRECTORY_SEPARATOR . 'frontend' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR;
-        
-        // Normalize path separators for Windows
+        // Save to backend/uploads/ (works when backend and frontend are separate, e.g. on DigitalOcean)
+        // __DIR__ = backend/rest/routes, dirname(dirname(__DIR__)) = backend
+        $backendDir = dirname(dirname(__DIR__));
+        $uploadDir = $backendDir . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
         $uploadDir = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $uploadDir);
         
         // Create directory if it doesn't exist
@@ -125,9 +141,8 @@ Flight::route('POST /upload/image', function() {
             return;
         }
         
-        // Return the URL path (relative to frontend root)
-        // Use forward slashes for web URLs regardless of OS
-        $imageUrl = 'assets/images/' . $filename;
+        // Return path relative to backend base URL (frontend prepends API base URL to load image)
+        $imageUrl = 'uploads/' . $filename;
         
         Flight::json([
             'success' => true,

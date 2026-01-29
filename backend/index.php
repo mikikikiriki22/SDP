@@ -57,7 +57,8 @@ Flight::route('/*', function () {
             preg_match('#^/reviews/fragrance/\d+$#', $request_url) ||
             preg_match('#^/reviews/user/\d+$#', $request_url) ||
             preg_match('#^/reviews/\d+$#', $request_url) ||
-            preg_match('#^/share/review/\d+$#', $request_url)
+            preg_match('#^/share/review/\d+$#', $request_url) ||
+            preg_match('#^/uploads/.+#', $request_url)
         )) {
             $is_public_route = true;
         }
