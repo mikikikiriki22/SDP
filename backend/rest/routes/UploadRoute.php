@@ -2,13 +2,49 @@
 
 /**
  * File upload route for images (profile pics, fragrance images).
- * Any authenticated user can upload. Global middleware enforces JWT.
- * Uploads are stored in backend/uploads/ and served via GET /uploads/@filename.
+ * Uses DigitalOcean Spaces (S3-compatible) when SPACES_* env vars are set;
+ * otherwise falls back to local backend/uploads/.
+ * GET /uploads/@filename: serves from local or redirects to Spaces CDN.
  */
 
-// Serve uploaded images (public, no auth required)
+require_once __DIR__ . '/../dao/config.php';
+
+// Helper: build Spaces CDN URL for a file key (e.g. uploads/fragrance_xxx.jpg)
+function uploadRoute_spacesCdnUrl($key) {
+    if (!Config::spacesEnabled()) return null;
+    $bucket = Config::SPACES_BUCKET();
+    $region = Config::SPACES_REGION();
+    return 'https://' . $bucket . '.' . $region . '.cdn.digitaloceanspaces.com/' . $key;
+}
+
+// Serve uploaded images (public, no auth). Redirect to Spaces if file exists there; else serve from local.
 Flight::route('GET /uploads/@filename', function($filename) {
     $filename = basename($filename);
+    $key = 'uploads/' . $filename;
+
+    if (Config::spacesEnabled()) {
+        try {
+            $region = Config::SPACES_REGION();
+            $s3 = new \Aws\S3\S3Client([
+                'version' => 'latest',
+                'region' => $region,
+                'endpoint' => 'https://' . $region . '.digitaloceanspaces.com',
+                'credentials' => [
+                    'key' => Config::SPACES_KEY(),
+                    'secret' => Config::SPACES_SECRET(),
+                ],
+            ]);
+            if ($s3->doesObjectExist(Config::SPACES_BUCKET(), $key)) {
+                $cdnUrl = uploadRoute_spacesCdnUrl($key);
+                Flight::redirect($cdnUrl, 302);
+                return;
+            }
+        } catch (Exception $e) {
+            // Fall through to local
+        }
+    }
+
+    // Local: serve from backend/uploads/
     $uploadDir = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
     $uploadDir = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $uploadDir);
     $filepath = $uploadDir . $filename;
@@ -21,12 +57,10 @@ Flight::route('GET /uploads/@filename', function($filename) {
     $mimeType = finfo_file($finfo, $filepath);
     finfo_close($finfo);
 
-    // Cache-busting: always fetch latest image (avoids stale cache after re-upload)
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
     header('Cache-Control: post-check=0, pre-check=0', false);
     header('Pragma: no-cache');
     header('Expires: 0');
-
     header('Content-Type: ' . $mimeType);
     header('Content-Length: ' . filesize($filepath));
     readfile($filepath);
@@ -35,13 +69,11 @@ Flight::route('GET /uploads/@filename', function($filename) {
 
 Flight::route('POST /upload/image', function() {
     try {
-        // Any authenticated user can upload (profile pics, fragrance images). Global middleware enforces JWT.
-
         if (!isset($_FILES['image'])) {
             Flight::json(['error' => 'No file uploaded. $_FILES is empty.'], 400);
             return;
         }
-        
+
         if ($_FILES['image']['error'] !== UPLOAD_ERR_OK) {
             $errorMessages = [
                 UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize',
@@ -58,109 +90,114 @@ Flight::route('POST /upload/image', function() {
         }
 
         $file = $_FILES['image'];
-        
-        // Validate file type
+
         $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/avif'];
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_file($finfo, $file['tmp_name']);
         finfo_close($finfo);
-        
         if (!in_array($mimeType, $allowedTypes)) {
             Flight::json(['error' => 'Invalid file type. Only images are allowed.'], 400);
             return;
         }
-        
-        // Validate file size (max 5MB)
-        $maxSize = 5 * 1024 * 1024; // 5MB
+
+        $maxSize = 5 * 1024 * 1024;
         if ($file['size'] > $maxSize) {
             Flight::json(['error' => 'File size too large. Maximum size is 5MB.'], 400);
             return;
         }
-        
-        // Generate unique filename
+
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        // Ensure valid extension
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
         if (!in_array($extension, $allowedExtensions)) {
             Flight::json(['error' => 'Invalid file extension. Allowed: ' . implode(', ', $allowedExtensions)], 400);
             return;
         }
         $filename = uniqid('fragrance_', true) . '.' . $extension;
-        
-        // Save to backend/uploads/ (works when backend and frontend are separate, e.g. on DigitalOcean)
-        // __DIR__ = backend/rest/routes, dirname(dirname(__DIR__)) = backend
+        $key = 'uploads/' . $filename;
+
+        if (Config::spacesEnabled()) {
+            // Upload to DigitalOcean Spaces (S3-compatible)
+            $region = Config::SPACES_REGION();
+            $bucket = Config::SPACES_BUCKET();
+            $endpoint = 'https://' . $region . '.digitaloceanspaces.com';
+
+            $s3 = new \Aws\S3\S3Client([
+                'version' => 'latest',
+                'region' => $region,
+                'endpoint' => $endpoint,
+                'credentials' => [
+                    'key' => Config::SPACES_KEY(),
+                    'secret' => Config::SPACES_SECRET(),
+                ],
+            ]);
+
+            $s3->putObject([
+                'Bucket' => $bucket,
+                'Key' => $key,
+                'Body' => file_get_contents($file['tmp_name']),
+                'ACL' => 'public-read',
+                'ContentType' => $mimeType,
+            ]);
+
+            $imageUrl = uploadRoute_spacesCdnUrl($key);
+            Flight::json([
+                'success' => true,
+                'image_url' => $imageUrl,
+                'message' => 'Image uploaded successfully'
+            ], 200);
+            return;
+        }
+
+        // Local fallback: save to backend/uploads/
         $backendDir = dirname(dirname(__DIR__));
         $uploadDir = $backendDir . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
         $uploadDir = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $uploadDir);
-        
-        // Create directory if it doesn't exist
+
         if (!is_dir($uploadDir)) {
             if (!@mkdir($uploadDir, 0755, true)) {
-                Flight::json([
-                    'error' => 'Failed to create upload directory'
-                ], 500);
+                Flight::json(['error' => 'Failed to create upload directory'], 500);
                 return;
             }
         }
-        
+
         $targetPath = $uploadDir . $filename;
-        
-        // Check if directory is writable
         if (!is_writable($uploadDir)) {
-            // Try to make it writable
             @chmod($uploadDir, 0755);
             if (!is_writable($uploadDir)) {
-                Flight::json([
-                    'error' => 'Upload directory is not writable'
-                ], 500);
+                Flight::json(['error' => 'Upload directory is not writable'], 500);
                 return;
             }
         }
-        
-        // Move uploaded file
+
         $moveResult = @move_uploaded_file($file['tmp_name'], $targetPath);
         if (!$moveResult) {
-            $error = error_get_last();
-            Flight::json([
-                'error' => 'Failed to save uploaded file',
-                'details' => $error ? $error['message'] : 'Unknown error'
-            ], 500);
+            $err = error_get_last();
+            Flight::json(['error' => 'Failed to save uploaded file', 'details' => $err ? $err['message'] : 'Unknown error'], 500);
             return;
         }
         clearstatcache(true, $targetPath);
         chmod($targetPath, 0644);
 
-        // Verify file was actually saved
         if (!file_exists($targetPath)) {
-            Flight::json([
-                'error' => 'File was not saved correctly'
-            ], 500);
+            Flight::json(['error' => 'File was not saved correctly'], 500);
             return;
         }
-        
-        // Verify file size matches (allow small differences due to filesystem)
         $savedSize = filesize($targetPath);
-        if (abs($savedSize - $file['size']) > 1024) { // Allow 1KB difference
-            Flight::json([
-                'error' => 'File size mismatch after upload',
-                'original_size' => $file['size'],
-                'saved_size' => $savedSize
-            ], 500);
+        if (abs($savedSize - $file['size']) > 1024) {
+            Flight::json(['error' => 'File size mismatch after upload', 'original_size' => $file['size'], 'saved_size' => $savedSize], 500);
             return;
         }
         if (function_exists('opcache_invalidate')) {
             opcache_invalidate($targetPath, true);
         }
 
-        // Return path relative to backend base URL (frontend prepends API base URL to load image)
         $imageUrl = 'uploads/' . $filename;
-        
         Flight::json([
             'success' => true,
             'image_url' => $imageUrl,
             'message' => 'Image uploaded successfully'
         ], 200);
-        
+
     } catch (Exception $e) {
         Flight::json(['error' => $e->getMessage()], 500);
     }

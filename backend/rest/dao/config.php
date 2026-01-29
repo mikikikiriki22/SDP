@@ -35,6 +35,26 @@ class Config
        return Config::get_env("JWT_SECRET", 'mileLegenda333');
    }
 
+   /** DigitalOcean Spaces (S3-compatible) – env: SPACES_KEY, SPACES_SECRET, SPACES_REGION, SPACES_BUCKET */
+   public static function SPACES_KEY() {
+       return Config::get_env("SPACES_KEY", '');
+   }
+   public static function SPACES_SECRET() {
+       return Config::get_env("SPACES_SECRET", '');
+   }
+   public static function SPACES_REGION() {
+       return Config::get_env("SPACES_REGION", 'nyc3');
+   }
+   public static function SPACES_BUCKET() {
+       return Config::get_env("SPACES_BUCKET", '');
+   }
+   public static function spacesEnabled() {
+       $k = Config::SPACES_KEY();
+       $s = Config::SPACES_SECRET();
+       $b = Config::SPACES_BUCKET();
+       return $k !== '' && $s !== '' && $b !== '';
+   }
+
    public static function FRONTEND_BASE_URL() {
        return rtrim(Config::get_env("FRONTEND_BASE_URL", 'http://localhost/projekt/frontend/'), '/') . '/';
    }
