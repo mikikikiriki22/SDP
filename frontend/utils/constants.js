@@ -13,9 +13,9 @@ const Constants = {
 };
 
 // Setup jQuery to send authentication token with every AJAX request
-$(document).ready(function() {
+$(document).ready(function () {
     $.ajaxSetup({
-        beforeSend: function(xhr) {
+        beforeSend: function (xhr) {
             var token = localStorage.getItem("user_token");
             if (token && token !== "undefined") {
                 xhr.setRequestHeader("Authentication", token);

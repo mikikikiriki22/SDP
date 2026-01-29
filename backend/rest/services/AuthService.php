@@ -69,6 +69,10 @@ class AuthService extends BaseService
         // Add user to database
         $entity = parent::create($entity);
 
+        if ($entity === false || !is_array($entity)) {
+            return ['success' => false, 'error' => 'Failed to create user.'];
+        }
+
         // Remove password from response
         unset($entity['password']);
 

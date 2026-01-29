@@ -115,18 +115,18 @@ $(document).ready(function () {
       $("#logout-btn").show().removeClass("force-hide");
       $("#login-btn").hide().addClass("force-hide");
       $("#register-btn").hide().addClass("force-hide");
-      
+
       // Navigation: show profile button with icon (remove force-hide)
       $("#profile-btn").show().removeClass("force-hide");
       $("#profile-icon-link").show();
-      
+
       // Admin panel: show only if admin (remove force-hide when showing)
       if (user.role === Constants.ADMIN_ROLE) {
         $("#adminpage-btn").show().removeClass("force-hide");
       } else {
         $("#adminpage-btn").hide().addClass("force-hide");
       }
-      
+
       // Fetch user profile to get image_url for navbar icon
       RestClient.get(`users/${user.id}`, function (profile) {
         var container = $("#profile-icon-container");
@@ -145,11 +145,11 @@ $(document).ready(function () {
       $("#login-btn").show().removeClass("force-hide");
       $("#register-btn").show().removeClass("force-hide");
       $("#logout-btn").hide().addClass("force-hide");
-      
+
       // Navigation: hide profile button and icon (with force-hide)
       $("#profile-btn").hide().addClass("force-hide");
       $("#profile-icon-link").hide();
-      
+
       // Admin panel: hide (with force-hide)
       $("#adminpage-btn").hide().addClass("force-hide");
     }
@@ -172,7 +172,7 @@ $(document).ready(function () {
         toastr.info("You are already logged in.", "", { positionClass: "toast-top-right" });
         return;
       }
-      
+
       // Hide all other sections and show only login
       $("#homepage, #find, #about").css("display", "none");
       $("#profile").css("display", "none");
@@ -999,7 +999,7 @@ $(document).ready(function () {
         toastr.info("You are already logged in.", "", { positionClass: "toast-top-right" });
         return;
       }
-      
+
       // Hide all other sections and show only register
       $("#item").html("");
       $("#homepage, #find, #about, #profile, #admin, #adminpage, #item, #login, #error_404").css("display", "none");
@@ -1457,15 +1457,15 @@ $(document).ready(function () {
   // ===========================================================================
   // INITIALIZATION
   // ===========================================================================
-  
+
   // Hide login page if user is already logged in
-  try { 
-    user = JSON.parse(localStorage.getItem("user")); 
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
   } catch (e) { }
   if (user && user.id) {
     $("#login").css("display", "none");
   }
-  
+
   // Hide error page if not on error route
   if (window.location.hash !== "#error_404") {
     $("#error_404").css("display", "none");
