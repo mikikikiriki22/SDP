@@ -18,7 +18,7 @@ $(document).ready(function() {
         beforeSend: function(xhr) {
             var token = localStorage.getItem("user_token");
             if (token && token !== "undefined") {
-                xhr.setRequestHeader("Authorization", "Bearer " + token);
+                xhr.setRequestHeader("Authentication", token);
             }
         }
     });
